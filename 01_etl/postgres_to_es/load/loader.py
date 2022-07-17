@@ -1,6 +1,7 @@
 import logging
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import streaming_bulk, bulk
+from postgres_to_es.backoff.backoff import backoff
 
 
 def connect_elasticsearch():
@@ -11,27 +12,6 @@ def connect_elasticsearch():
     if client.ping():
         return client
     return None
-
-
-def create_test_index(client, index_name):
-    request_body = {
-        "settings": {
-            "number_of_shards": 5,
-            "number_of_replicas": 1
-        },
-
-        'mappings': {
-            'examplecase': {
-                'properties': {
-                    'address': {'index': 'not_analyzed', 'type': 'string'},
-                    'date_of_birth': {'index': 'not_analyzed', 'format': 'dateOptionalTime', 'type': 'date'},
-                    'some_PK': {'index': 'not_analyzed', 'type': 'string'},
-                    'fave_colour': {'index': 'analyzed', 'type': 'string'},
-                    'email_domain': {'index': 'not_analyzed', 'type': 'string'},
-                }}}
-    }
-    print("creating 'example_index' index...")
-    client.indices.create(index='example_index', body=request_body)
 
 
 def create_index(client, index_name):
@@ -161,6 +141,7 @@ def create_index(client, index_name):
 class ElasticsearchLoader:
     def __init__(self, **kwargs):
         self.client = connect_elasticsearch()
+        self._loger = logging.getLogger()
 
     def load_data(self, transformed_data, chunk_size):
         if self.client is None:
@@ -188,9 +169,11 @@ class ElasticsearchLoader:
                         f"NOK DOCUMENTS (log limited to 10) in batch {bulks_processed}: {not_ok[-10:]}")
                     not_ok = []
             self._logger.info(
-                f"Refreshing index {es_dataset.es_index_name} to make indexed documents searchable.")
+                f"Refreshing index {self.client.es_index_name} to make indexed documents searchable.")
             self.client.indices.refresh(index='movies')
         except:
-            pass
+            self._logger.info(
+                f"Error when bulking: {Exception}")
+            backoff(self.load_data(transformed_data, chunk_size))
         else:
             return cnt + 1

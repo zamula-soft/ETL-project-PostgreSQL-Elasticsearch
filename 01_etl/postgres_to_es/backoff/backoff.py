@@ -1,7 +1,7 @@
 import logging
 
 
-def backoff(start_sleep_time=0.1, factor=2, border_sleep_time=10):
+def backoff(start_sleep_time: object = 0.1, factor: object = 2, border_sleep_time: object = 10) -> object:
     """
     Функция для повторного выполнения функции через некоторое время, если возникла ошибка.
     Использует наивный экспоненциальный рост времени повтора (factor) до граничного времени ожидания (border_sleep_time)

@@ -1,10 +1,11 @@
 import os
 import logging
-from dotenv import load_dotenv
-
+from contextlib import closing
 import psycopg2
 from psycopg2 import sql
 from psycopg2.extras import DictCursor
+
+from postgres_to_es.config.settings import Settings
 from postgres_to_es.state.state import State, JsonFileStorage
 
 PG_SQL = """SELECT
@@ -31,20 +32,19 @@ LEFT JOIN content.person_film_work pfw ON pfw.film_work_id = fw.id
 LEFT JOIN content.person p ON p.id = pfw.person_id
 LEFT JOIN content.genre_film_work gfw ON gfw.film_work_id = fw.id
 LEFT JOIN content.genre g ON g.id = gfw.genre_id
-WHERE fw.modified > %(state)s
+WHERE fw.modified > %(state)s OR pfw.modified > %(state)s OR gfw.modified > %(state)s 
 GROUP BY fw.id
 ORDER BY fw.modified
 LIMIT 100;
 """
 
 
-def connect():
-    load_dotenv()
-    dbname = os.environ.get('PSQL_DBNAME')
-    user = os.environ.get('PSQL_USER')
-    password = os.environ.get('PSQL_PASSWORD')
-    host = os.environ.get('PSQL_HOST')
-    port = os.environ.get('PSQL_PORT')
+def connect(settings):
+    dbname = settings.psql_dbname
+    user = settings.psql_user
+    password = settings.psql_password
+    host = settings.psql_host
+    port = settings.psql_port
     dsl = {'dbname': dbname, 'user': user, 'password': password, 'host': host, 'port': int(port)}
 
     return psycopg2.connect(**dsl, cursor_factory=DictCursor)
@@ -52,13 +52,13 @@ def connect():
 
 class PostgresExtractor:
     def __init__(self):
-        pg_conn = connect()
+        settings = Settings()
+        pg_conn = connect(settings)
         self.pg_conn = pg_conn
-        self.cursor = self.pg_conn.cursor()  # cursor_factory=DictCursor)
+        self.file_path = settings.file_path
 
     def get_state(self):
-        file_path = os.environ.get('FILE_PATH')
-        js_storage = JsonFileStorage(file_path)
+        js_storage = JsonFileStorage(self.file_path)
         state = State(js_storage)
         str_state = {'state': state.get_state('modified')}
         return str_state
@@ -72,6 +72,3 @@ class PostgresExtractor:
                 if not records:
                     break
                 yield list(records)
-
-
-
