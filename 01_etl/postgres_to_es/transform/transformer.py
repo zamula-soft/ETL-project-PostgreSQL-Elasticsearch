@@ -79,20 +79,14 @@ class DataTransform:
         self.index_name = 'movies'
 
     def transform_data(self, raw_data: Movies, batch_size: int):
-<<<<<<< HEAD
         for row in raw_data:
             data =[]
-=======
-        data = []
-        for row in raw_data:
->>>>>>> origin/main
             persons = row['persons']
             director = get_director(persons)
             actor_names = get_actors_names(persons)
             writers_name = get_writers_names(persons)
             actors = get_actors(persons)
             writers = get_writers(persons)
-<<<<<<< HEAD
             item = {'_op_type': 'update', '_index': self.index_name, #'_type': '_doc',
                     'source': {
                         '_id': row['id'], 'imdb_rating': row['rating'],
@@ -102,43 +96,3 @@ class DataTransform:
             data.append(item)
             json_data = json.dumps(item)
             yield json_data
-=======
-            item = {'_index': self.index_name, '_type': '_doc',
-                    '_id': row['id'], 'imdb_rating': row['rating'],
-                    'genre': row['genres'], 'title': row['title'], 'description': row['description'],
-                    'director': director, 'actors_names': actor_names,
-                    'writers_names': writers_name, 'actors': actors, 'writers': writers}
-            data.append(item)
-        json_data = json.dumps(data)
-        return json_data
-
-# from pydantic import BaseModel, BaseSettings, Field, FilePath
-#
-# class PostgresConnection(BaseModel):
-#     dbname: str = Field("movies_database", env='DB_NAME')
-#     user: str = Field("app", env='DB_USER')
-#     password: str = Field("123qwe", env='DB_PASSWORD')
-#     host: str = Field("192.168.248.132", env='DB_HOST')
-#     port: int = Field(5432, env='DB_PORT')
-#
-#
-# class ElasticConnection(BaseModel):
-#     es_host: str = Field("192.168.248.132", env='ELASTIC_HOST')
-#     es_port: str = Field("9200", env='ELASTIC_PORT')
-#     es_uri: str = Field("http://192.168.248.132:9200", env='ELASTIC_URI')
-#
-#
-# class Etl(BaseModel):
-#     state_file: FilePath = Field("etl/state.json", env="FILE_STATE_PATH")
-#
-#
-# class Settings(BaseSettings):
-#     postgres_conn: PostgresConnection = PostgresConnection()
-#     elastic_conn: ElasticConnection = ElasticConnection()
-#     etl_state_file_path: Etl = Etl()
-#
-#     class Config:
-#         env_file = 'etl/.env'
-#         env_file_encoding = 'utf-8'
-#         case_sensitive = True
->>>>>>> origin/main
