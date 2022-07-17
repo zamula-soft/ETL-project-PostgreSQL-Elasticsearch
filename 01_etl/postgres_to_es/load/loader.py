@@ -7,7 +7,6 @@ def connect_elasticsearch():
     client = Elasticsearch(
         "http://localhost:9200",
     )
-    # Successful response!
     client.info()
     if client.ping():
         return client
@@ -174,8 +173,7 @@ class ElasticsearchLoader:
         try:
             bulks_processed = 0
             not_ok = []
-            # bulk(self.client, transformed_data)
-            # streaming_bulk(self.client, 'update', transformed_data, chunk_size, raise_on_error=False)
+            streaming_bulk(self.client, 'update', transformed_data, chunk_size, raise_on_error=False)
 
             for cnt, response in enumerate(streaming_bulk(self.client, transformed_data, chunk_size)):
                 ok, result = response
@@ -183,16 +181,16 @@ class ElasticsearchLoader:
                     not_ok.append(result)
                 if cnt % chunk_size == 0:
                     bulks_processed += 1
-                # self._logger.debug(
-                #     f"Bulk number {bulks_processed} processed, already processed docs {cnt}.")
+                self._logger.debug(
+                    f"Bulk number {bulks_processed} processed, already processed docs {cnt}.")
                 if len(not_ok):
-                    # self._logger.error(
-                    #     f"NOK DOCUMENTS (log limited to 10) in batch {bulks_processed}: {not_ok[-10:]}")
+                    self._logger.error(
+                        f"NOK DOCUMENTS (log limited to 10) in batch {bulks_processed}: {not_ok[-10:]}")
                     not_ok = []
-            # self._logger.info(
-            #     f"Refreshing index {es_dataset.es_index_name} to make indexed documents searchable.")
+            self._logger.info(
+                f"Refreshing index {es_dataset.es_index_name} to make indexed documents searchable.")
             self.client.indices.refresh(index='movies')
         except:
-             pass
-        # else:
-        #     return cnt + 1
+            pass
+        else:
+            return cnt + 1

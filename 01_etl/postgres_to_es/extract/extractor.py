@@ -33,7 +33,6 @@ import psycopg2
 from psycopg2 import sql
 from psycopg2.extras import DictCursor
 from postgres_to_es.state.state import State, JsonFileStorage
-from postgres_to_es.transform.transformer import DataTransform
 
 PG_SQL = """SELECT
    fw.id,
