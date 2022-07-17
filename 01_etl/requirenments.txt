@@ -1,8 +1,4 @@
 flake8==4.0
 python-dotenv==0.20
 psycopg2==2.9.3
-<<<<<<< HEAD
-elasticsearch==7.7
-=======
 elasticsearch==8.3
->>>>>>> origin/main
